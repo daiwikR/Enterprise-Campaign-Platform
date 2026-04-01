@@ -1,0 +1,614 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "Campaign Analytics API",
+    "version": "v1",
+    "description": "Enterprise Campaign Analytics Platform — ASP.NET Core 8 Web API with JWT Bearer authentication and RBAC."
+  },
+  "servers": [
+    {
+      "url": "https://localhost:7000",
+      "description": "Local development (HTTPS)"
+    },
+    {
+      "url": "https://<azure-app-service>.azurewebsites.net",
+      "description": "Azure App Service (Production)"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "Bearer": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization",
+        "description": "JWT Authorization header using the Bearer scheme. Example: 'Bearer {token}'"
+      }
+    },
+    "schemas": {
+      "RegisterDto": {
+        "type": "object",
+        "required": ["firstName", "lastName", "email", "password", "role"],
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "maxLength": 100,
+            "example": "Jane"
+          },
+          "lastName": {
+            "type": "string",
+            "maxLength": 100,
+            "example": "Doe"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "jane.doe@company.com"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "description": "Must contain uppercase, lowercase, digit, and non-alphanumeric character.",
+            "example": "P@ssw0rd!"
+          },
+          "department": {
+            "type": "string",
+            "maxLength": 100,
+            "nullable": true,
+            "example": "Marketing"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["Admin", "Manager", "Analyst", "Viewer"],
+            "default": "Viewer",
+            "example": "Manager"
+          }
+        }
+      },
+      "LoginDto": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "jane.doe@company.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "P@ssw0rd!"
+          }
+        }
+      },
+      "AuthResponseDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Signed JWT (HS256). Valid for 60 minutes.",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "jane.doe@company.com"
+          },
+          "fullName": {
+            "type": "string",
+            "example": "Jane Doe"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": ["Manager"]
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-04-01T13:00:00Z"
+          }
+        }
+      },
+      "CampaignCreateDto": {
+        "type": "object",
+        "required": ["name", "startDate"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "example": "Spring Loyalty Push"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1000,
+            "nullable": true,
+            "example": "Q2 loyalty program activation across all channels."
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-01T00:00:00Z"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Must be strictly after startDate when provided.",
+            "example": "2026-06-30T23:59:59Z"
+          },
+          "budget": {
+            "type": "number",
+            "format": "decimal",
+            "minimum": 0,
+            "example": 50000.00
+          }
+        }
+      },
+      "CampaignUpdateDto": {
+        "type": "object",
+        "description": "All fields are optional; only supplied fields are applied (partial update).",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "nullable": true,
+            "example": "Spring Loyalty Push — Revised"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1000,
+            "nullable": true,
+            "example": "Updated description after scope change."
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "example": "2026-05-15T00:00:00Z"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "example": "2026-07-31T23:59:59Z"
+          },
+          "budget": {
+            "type": "number",
+            "format": "decimal",
+            "minimum": 0,
+            "nullable": true,
+            "example": 75000.00
+          },
+          "status": {
+            "type": "integer",
+            "nullable": true,
+            "description": "CampaignStatus enum integer value: Draft=0, Active=1, Paused=2, Completed=3, Cancelled=4.",
+            "enum": [0, 1, 2, 3, 4],
+            "example": 1
+          }
+        }
+      },
+      "CampaignResponseDto": {
+        "type": "object",
+        "properties": {
+          "campaignId": {
+            "type": "integer",
+            "example": 42
+          },
+          "name": {
+            "type": "string",
+            "example": "Spring Loyalty Push"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "example": "Q2 loyalty program activation across all channels."
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-01T00:00:00Z"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "example": "2026-06-30T23:59:59Z"
+          },
+          "status": {
+            "type": "string",
+            "description": "Human-readable CampaignStatus enum name.",
+            "enum": ["Draft", "Active", "Paused", "Completed", "Cancelled"],
+            "example": "Active"
+          },
+          "budget": {
+            "type": "number",
+            "format": "decimal",
+            "example": 50000.00
+          },
+          "spentAmount": {
+            "type": "number",
+            "format": "decimal",
+            "example": 12500.00
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-04-01T12:00:00Z"
+          },
+          "createdByUserId": {
+            "type": "string",
+            "description": "ASP.NET Identity user ID (GUID string).",
+            "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          }
+        }
+      },
+      "CampaignSummaryReport": {
+        "type": "object",
+        "description": "Keyless result set returned by the dbo.GetCampaignSummaryReport stored procedure.",
+        "properties": {
+          "campaignId": {
+            "type": "integer",
+            "example": 42
+          },
+          "campaignName": {
+            "type": "string",
+            "example": "Spring Loyalty Push"
+          },
+          "totalImpressions": {
+            "type": "integer",
+            "format": "int64",
+            "example": 1500000
+          },
+          "totalClicks": {
+            "type": "integer",
+            "format": "int64",
+            "example": 45000
+          },
+          "totalConversions": {
+            "type": "integer",
+            "format": "int64",
+            "example": 3200
+          },
+          "totalRevenue": {
+            "type": "number",
+            "format": "decimal",
+            "example": 128000.00
+          },
+          "spentAmount": {
+            "type": "number",
+            "format": "decimal",
+            "example": 12500.00
+          },
+          "roi": {
+            "type": "number",
+            "format": "decimal",
+            "description": "Return on Investment: (totalRevenue - spentAmount) / spentAmount * 100.",
+            "example": 924.00
+          }
+        }
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "EndDate must be after StartDate."
+          }
+        }
+      },
+      "ValidationProblemDetails": {
+        "type": "object",
+        "properties": {
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "example": {
+              "Name": ["The Name field is required."]
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "Bearer": []
+    }
+  ],
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Register a new user and receive a JWT.",
+        "description": "Creates an ASP.NET Identity user, assigns the requested role, and returns a signed JWT. No authentication required.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Registration successful. Returns JWT and user metadata.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failure or role not in the allowed list.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationProblemDetails" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Authenticate and receive a JWT.",
+        "description": "Validates credentials against ASP.NET Identity. Enforces lockout after 5 failed attempts (15-minute window).",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful. Returns JWT and user metadata.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Model validation failed.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationProblemDetails" }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials."
+          },
+          "423": {
+            "description": "Account locked out due to too many failed attempts.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProblemDetails" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/campaigns": {
+      "get": {
+        "tags": ["Campaigns"],
+        "summary": "Returns all campaigns.",
+        "description": "Returns all campaigns ordered by CreatedAt descending. Requires any authenticated role (Admin, Manager, Analyst, Viewer).",
+        "security": [{ "Bearer": [] }],
+        "responses": {
+          "200": {
+            "description": "List of campaigns.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CampaignResponseDto" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Missing or invalid JWT." },
+          "403": { "description": "Authenticated but role is not in AllRoles policy." }
+        }
+      },
+      "post": {
+        "tags": ["Campaigns"],
+        "summary": "Creates a new campaign.",
+        "description": "Requires Manager or Admin role (ManagerUp policy). New campaigns always start in Draft status. The createdByUserId is resolved from the JWT NameIdentifier claim.",
+        "security": [{ "Bearer": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CampaignCreateDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Campaign created. Location header points to the new resource.",
+            "headers": {
+              "Location": {
+                "description": "URL of the newly created campaign.",
+                "schema": { "type": "string", "format": "uri" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CampaignResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Model validation failure or EndDate <= StartDate.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProblemDetails" }
+              }
+            }
+          },
+          "401": { "description": "Missing or invalid JWT." },
+          "403": { "description": "Role is below Manager (e.g., Analyst or Viewer)." }
+        }
+      }
+    },
+    "/api/campaigns/{id}": {
+      "get": {
+        "tags": ["Campaigns"],
+        "summary": "Returns a single campaign by ID.",
+        "description": "Requires any authenticated role (AllRoles policy).",
+        "security": [{ "Bearer": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "The integer primary key of the campaign.",
+            "example": 42
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Campaign found.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CampaignResponseDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing or invalid JWT." },
+          "403": { "description": "Insufficient role." },
+          "404": { "description": "Campaign not found." }
+        }
+      },
+      "put": {
+        "tags": ["Campaigns"],
+        "summary": "Updates an existing campaign.",
+        "description": "Partial update — only non-null fields are applied. Requires Manager or Admin role (ManagerUp policy). EndDate must remain strictly after StartDate after merge.",
+        "security": [{ "Bearer": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "The integer primary key of the campaign to update.",
+            "example": 42
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CampaignUpdateDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Campaign updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CampaignResponseDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Model validation failure or EndDate <= StartDate.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProblemDetails" }
+              }
+            }
+          },
+          "401": { "description": "Missing or invalid JWT." },
+          "403": { "description": "Role is below Manager." },
+          "404": { "description": "Campaign not found." }
+        }
+      },
+      "delete": {
+        "tags": ["Campaigns"],
+        "summary": "Permanently deletes a campaign.",
+        "description": "Hard delete. Cascade-deletes associated CampaignEvents (per EF FK configuration). Restricted to Admin role only (AdminOnly policy).",
+        "security": [{ "Bearer": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "The integer primary key of the campaign to delete.",
+            "example": 42
+          }
+        ],
+        "responses": {
+          "204": { "description": "Campaign deleted. No content returned." },
+          "401": { "description": "Missing or invalid JWT." },
+          "403": { "description": "Role is not Admin." },
+          "404": { "description": "Campaign not found." }
+        }
+      }
+    },
+    "/api/campaigns/report/summary": {
+      "get": {
+        "tags": ["Campaigns"],
+        "summary": "Returns campaign performance summary via stored procedure.",
+        "description": "Executes dbo.GetCampaignSummaryReport. All query parameters are optional — pass none to retrieve all campaigns. Requires Analyst, Manager, or Admin role (AnalystUp policy).",
+        "security": [{ "Bearer": [] }],
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "nullable": true },
+            "description": "Filter to a specific campaign. Omit to return all.",
+            "example": 42
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date-time", "nullable": true },
+            "description": "Inclusive lower bound for event date range.",
+            "example": "2026-05-01T00:00:00Z"
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date-time", "nullable": true },
+            "description": "Inclusive upper bound for event date range.",
+            "example": "2026-06-30T23:59:59Z"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of campaign summary report rows.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CampaignSummaryReport" }
+                }
+              }
+            }
+          },
+          "401": { "description": "Missing or invalid JWT." },
+          "403": { "description": "Role is Viewer (below AnalystUp threshold)." }
+        }
+      }
+    }
+  }
+}
