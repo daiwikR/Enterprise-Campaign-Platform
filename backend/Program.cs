@@ -7,6 +7,7 @@ using CampaignAnalytics.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -72,6 +73,7 @@ builder.Services.AddScoped<ICampaignService, CampaignService>();
 
 // ── MVC + Swagger ─────────────────────────────────────────────────────────────
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -115,5 +117,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    AllowCachingResponses = false
+});
 app.MapControllers();
 app.Run();

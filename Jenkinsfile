@@ -215,7 +215,11 @@ pipeline {
                 sh "dotnet publish ${env.BACKEND_PROJ} --configuration Release --output ${env.BACKEND_PUBLISH}"
 
                 echo '==> Zipping backend publish output for Azure deployment'
-                sh "zip -r ${env.BACKEND_ZIP} ${env.BACKEND_PUBLISH}/"
+                sh """
+                    rm -f ${env.BACKEND_ZIP}
+                    cd ${env.BACKEND_PUBLISH}
+                    zip -r ../publish.zip .
+                """
 
                 echo '==> Archiving build artifacts'
                 archiveArtifacts artifacts: "${env.BACKEND_ZIP},frontend/dist/**",
