@@ -45,7 +45,7 @@ pipeline {
         BACKEND_PUBLISH= 'backend/publish'
         BACKEND_ZIP    = 'backend/publish.zip'
         FRONTEND_DIR   = 'frontend'
-        COVERAGE_XML   = 'backend/TestResults/coverage/coverage.cobertura.xml'
+        COVERAGE_XML   = 'backend/TestResults/coverage/Cobertura.xml'
         KARMA_LCOV     = 'frontend/coverage/campaign-analytics-frontend/lcov.info'
     }
 
