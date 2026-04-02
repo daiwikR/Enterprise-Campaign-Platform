@@ -178,8 +178,7 @@ pipeline {
                         npx ng test \
                             --watch=false \
                             --browsers=ChromeHeadlessCI \
-                            --code-coverage \
-                            --karmaConfig=karma.conf.js
+                            --code-coverage
                     """
                 }
 
