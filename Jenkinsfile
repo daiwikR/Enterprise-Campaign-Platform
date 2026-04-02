@@ -40,7 +40,7 @@ pipeline {
 
         // Derived path constants kept here for readability
         BACKEND_PROJ   = 'backend/CampaignAnalytics.API.csproj'
-        BACKEND_TEST   = 'backend/Tests'
+        BACKEND_TEST   = 'backend/CampaignAnalytics.API.csproj'
         BACKEND_RESULTS= 'backend/TestResults'
         BACKEND_PUBLISH= 'backend/publish'
         BACKEND_ZIP    = 'backend/publish.zip'
