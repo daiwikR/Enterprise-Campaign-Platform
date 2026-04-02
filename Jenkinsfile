@@ -104,10 +104,17 @@ pipeline {
                         -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
                 """
 
-                echo '==> Merging coverage reports into Cobertura XML via reportgenerator'
-                // reportgenerator is expected to be available globally after:
-                //   dotnet tool install -g dotnet-reportgenerator-globaltool
+                echo '==> Ensuring reportgenerator global tool is installed'
                 sh """
+                    export PATH="\$PATH:\$HOME/.dotnet/tools"
+                    dotnet tool install -g dotnet-reportgenerator-globaltool 2>/dev/null \
+                        || dotnet tool update -g dotnet-reportgenerator-globaltool 2>/dev/null \
+                        || true
+                """
+
+                echo '==> Merging coverage reports into Cobertura XML via reportgenerator'
+                sh """
+                    export PATH="\$PATH:\$HOME/.dotnet/tools"
                     reportgenerator \
                         -reports:"${env.BACKEND_RESULTS}/**/*.cobertura.xml" \
                         -targetdir:"${env.BACKEND_RESULTS}/coverage" \
