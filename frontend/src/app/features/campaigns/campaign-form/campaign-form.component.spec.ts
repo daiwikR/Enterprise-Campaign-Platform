@@ -89,7 +89,7 @@ describe('CampaignFormComponent — Create mode', () => {
     mockCampaignService.create.and.returnValue(of({
       campaignId: 1, name: 'Campaign', description: null,
       startDate: '2026-05-01T00:00:00Z', endDate: '2026-06-01T00:00:00Z',
-      status: 'Draft', budget: null, spentAmount: 0,
+      status: 'Draft', budget: 0, spentAmount: 0,
       createdAt: '2026-04-01T00:00:00Z', createdByUserId: 'abc'
     }));
     component.form.patchValue({
