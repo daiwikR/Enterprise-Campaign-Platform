@@ -65,7 +65,7 @@ describe('CampaignListComponent', () => {
   });
 
   it('should load and display campaigns on init', () => {
-    expect(mockCampaignService.getAll).toHaveBeenCalledOnce();
+    expect(mockCampaignService.getAll).toHaveBeenCalledTimes(1);
     expect(component.campaigns.length).toBe(2);
     expect(component.loading).toBeFalse();
   });

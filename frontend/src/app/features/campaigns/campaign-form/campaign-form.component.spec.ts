@@ -67,7 +67,7 @@ describe('CampaignFormComponent — Create mode', () => {
     component.form.patchValue({ name: 'Valid Campaign', startDate: '2026-05-01T00:00' });
     component.onSubmit();
 
-    expect(mockCampaignService.create).toHaveBeenCalledOnce();
+    expect(mockCampaignService.create).toHaveBeenCalledTimes(1);
     expect(mockRouter.navigate).toHaveBeenCalledWith(['/campaigns']);
   });
 
