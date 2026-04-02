@@ -157,7 +157,7 @@ pipeline {
             steps {
                 dir("${env.FRONTEND_DIR}") {
                     echo '==> Installing npm dependencies (clean install)'
-                    sh 'npm ci'
+                    sh 'npm ci --include=dev'
 
                     echo '==> Building Angular app in production mode'
                     sh 'npx ng build --configuration production'
