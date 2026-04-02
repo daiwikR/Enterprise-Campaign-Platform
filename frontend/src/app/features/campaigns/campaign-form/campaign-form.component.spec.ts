@@ -84,6 +84,24 @@ describe('CampaignFormComponent — Create mode', () => {
     component.onSubmit();
     expect(component.form.get('name')?.touched).toBeTrue();
   });
+
+  it('should include endDate in create payload when endDate is provided', () => {
+    mockCampaignService.create.and.returnValue(of({
+      campaignId: 1, name: 'Campaign', description: null,
+      startDate: '2026-05-01T00:00:00Z', endDate: '2026-06-01T00:00:00Z',
+      status: 'Draft', budget: null, spentAmount: 0,
+      createdAt: '2026-04-01T00:00:00Z', createdByUserId: 'abc'
+    }));
+    component.form.patchValue({
+      name: 'Campaign',
+      startDate: '2026-05-01T00:00',
+      endDate: '2026-06-01T00:00'
+    });
+    component.onSubmit();
+    expect(mockCampaignService.create).toHaveBeenCalledWith(
+      jasmine.objectContaining({ endDate: jasmine.any(String) })
+    );
+  });
 });
 
 describe('CampaignFormComponent — Edit mode', () => {
@@ -139,6 +157,18 @@ describe('CampaignFormComponent — Edit mode', () => {
     mockCampaignService.getById.and.returnValue(throwError(() => new Error('Load failed')));
     component.ngOnInit();
     expect(component.errorMessage).toBeTruthy();
+  });
+
+  it('should handle null endDate and null description when loading campaign', () => {
+    mockCampaignService.getById.and.returnValue(of({
+      campaignId: 42, name: 'No EndDate', description: null,
+      startDate: '2026-05-01T00:00:00Z', endDate: null,
+      status: 'Active', budget: 50000, spentAmount: 5000,
+      createdAt: '2026-04-01T00:00:00Z', createdByUserId: 'xyz'
+    }));
+    component.ngOnInit();
+    expect(component.form.get('endDate')?.value).toBe('');
+    expect(component.form.get('description')?.value).toBe('');
   });
 
   it('should navigate to campaigns list on cancel', () => {

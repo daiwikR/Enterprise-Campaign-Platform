@@ -112,3 +112,37 @@ describe('CampaignListComponent', () => {
     expect(component.errorMessage).toBeTruthy();
   });
 });
+
+describe('CampaignListComponent — null user', () => {
+  let component: CampaignListComponent;
+  let fixture: ComponentFixture<CampaignListComponent>;
+
+  beforeEach(async () => {
+    const nullAuthService = jasmine.createSpyObj('AuthService', [], {
+      currentUser$: of(null)
+    });
+    const mockCampaignService = jasmine.createSpyObj('CampaignService', ['getAll', 'delete']);
+    mockCampaignService.getAll.and.returnValue(of([]));
+    const mockRouter = jasmine.createSpyObj('Router', ['navigate']);
+
+    await TestBed.configureTestingModule({
+      declarations: [CampaignListComponent],
+      imports: [CommonModule],
+      providers: [
+        { provide: CampaignService, useValue: mockCampaignService },
+        { provide: AuthService, useValue: nullAuthService },
+        { provide: Router, useValue: mockRouter }
+      ]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(CampaignListComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should not set permissions when currentUser$ emits null', () => {
+    expect(component.canCreate).toBeFalse();
+    expect(component.canEdit).toBeFalse();
+    expect(component.canDelete).toBeFalse();
+  });
+});
