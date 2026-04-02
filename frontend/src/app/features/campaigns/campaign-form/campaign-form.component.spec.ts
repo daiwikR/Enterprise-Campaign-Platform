@@ -133,4 +133,16 @@ describe('CampaignFormComponent — Edit mode', () => {
     component.onSubmit();
     expect(mockCampaignService.update).toHaveBeenCalledWith(42, jasmine.any(Object));
   });
+
+  it('should show error message when getById fails in edit mode', () => {
+    // Re-configure so getById fails on the next subscription
+    mockCampaignService.getById.and.returnValue(throwError(() => new Error('Load failed')));
+    component.ngOnInit();
+    expect(component.errorMessage).toBeTruthy();
+  });
+
+  it('should navigate to campaigns list on cancel', () => {
+    component.onCancel();
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/campaigns']);
+  });
 });

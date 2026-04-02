@@ -98,4 +98,17 @@ describe('CampaignListComponent', () => {
     expect(mockCampaignService.delete).toHaveBeenCalledWith(1);
     expect(mockCampaignService.getAll).toHaveBeenCalledTimes(2);
   });
+
+  it('should not call delete when confirm is cancelled', () => {
+    spyOn(window, 'confirm').and.returnValue(false);
+    component.onDelete(1);
+    expect(mockCampaignService.delete).not.toHaveBeenCalled();
+  });
+
+  it('should show error message when delete fails', () => {
+    mockCampaignService.delete.and.returnValue(throwError(() => new Error('Delete failed')));
+    spyOn(window, 'confirm').and.returnValue(true);
+    component.onDelete(1);
+    expect(component.errorMessage).toBeTruthy();
+  });
 });
