@@ -241,17 +241,8 @@ pipeline {
                 }
             }
 
-            // Bind all six Azure credentials as environment variables.
-            // Each references a Jenkins "Secret text" credential by its ID.
+            // Bind deploy target values from Jenkins "Secret text" credentials.
             environment {
-                // Azure Service Principal — Application (Client) ID
-                AZURE_CLIENT_ID       = credentials('AZURE_CLIENT_ID')
-                // Azure Service Principal — Client Secret
-                AZURE_CLIENT_SECRET   = credentials('AZURE_CLIENT_SECRET')
-                // Azure Active Directory Tenant ID
-                AZURE_TENANT_ID       = credentials('AZURE_TENANT_ID')
-                // Azure Subscription ID
-                AZURE_SUBSCRIPTION_ID = credentials('AZURE_SUBSCRIPTION_ID')
                 // Azure Resource Group that owns the App Service
                 AZURE_RESOURCE_GROUP  = credentials('AZURE_RESOURCE_GROUP')
                 // Azure App Service name (hostname prefix before .azurewebsites.net)
@@ -259,29 +250,31 @@ pipeline {
             }
 
             steps {
-                echo '==> Authenticating with Azure via Service Principal'
-                sh """
-                    az login --service-principal \
-                        --username  "\$AZURE_CLIENT_ID" \
-                        --password  "\$AZURE_CLIENT_SECRET" \
-                        --tenant    "\$AZURE_TENANT_ID"
+                withCredentials([azureServicePrincipal('azure-creds')]) {
+                    echo '==> Authenticating with Azure via Service Principal'
+                    sh """
+                        az login --service-principal \
+                            --username  "\$AZURE_CLIENT_ID" \
+                            --password  "\$AZURE_CLIENT_SECRET" \
+                            --tenant    "\$AZURE_TENANT_ID"
 
-                    az account set --subscription "\$AZURE_SUBSCRIPTION_ID"
-                """
+                        az account set --subscription "\$AZURE_SUBSCRIPTION_ID"
+                    """
 
-                echo '==> Deploying backend zip to Azure App Service'
-                sh """
-                    az webapp deploy \
-                        --resource-group "\$AZURE_RESOURCE_GROUP" \
-                        --name           "\$AZURE_APP_SERVICE_NAME" \
-                        --src-path       "${env.BACKEND_ZIP}" \
-                        --type           zip
-                """
+                    echo '==> Deploying backend zip to Azure App Service'
+                    sh """
+                        az webapp deploy \
+                            --resource-group "\$AZURE_RESOURCE_GROUP" \
+                            --name           "\$AZURE_APP_SERVICE_NAME" \
+                            --src-path       "${env.BACKEND_ZIP}" \
+                            --type           zip
+                    """
 
-                echo '==> Running post-deployment health check'
-                sh """
-                    scripts/health-check.sh "https://\${AZURE_APP_SERVICE_NAME}.azurewebsites.net"
-                """
+                    echo '==> Running post-deployment health check'
+                    sh """
+                        scripts/health-check.sh "https://\${AZURE_APP_SERVICE_NAME}.azurewebsites.net"
+                    """
+                }
             }
 
             post {
