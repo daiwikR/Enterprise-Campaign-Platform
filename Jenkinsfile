@@ -233,7 +233,12 @@ pipeline {
         // ---------------------------------------------------------------------
         stage('Deploy to Azure App Service') {
             when {
-                branch 'main'
+                expression {
+                    def branchName = env.BRANCH_NAME ?: env.GIT_BRANCH ?: ''
+                    return branchName == 'main' ||
+                           branchName == 'origin/main' ||
+                           branchName == 'refs/heads/main'
+                }
             }
 
             // Bind all six Azure credentials as environment variables.
